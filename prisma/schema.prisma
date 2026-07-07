@@ -1,13 +1,98 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum RankingCliente {
+  C
+  B
+  A
+  S
+  SS
+}
+
+enum TipoCliente {
+  FIXO
+  AVULSO
+}
+
+model Empresa {
+  id                        String    @id @default(uuid())
+  razaoSocial               String    // [cite: 17]
+  nomeFantasia              String?   // [cite: 17]
+  cnpj                      String    @unique // [cite: 17]
+  inscricaoEstadual         String?   // [cite: 17]
+  inscricaoMunicipal        String?   // [cite: 17]
+  endereco                  String
+  tempoEmpresaMeses         Int?
+  dataFundacao              DateTime?
+  dataEntradaContabilidade  DateTime?
+  contadorAnterior          String?
+  produtoOuServico          String
+  capitalSocial             Float
+  ramoAtuacao               String
+  participaLicitacao        Boolean   @default(false)
+  tipoCliente               TipoCliente @default(FIXO)
+  regimeTributario          String    // [cite: 17, 38]
+  dataBaixa                 DateTime?
+  pendenciasFiscaisGov      Boolean   @default(false)
+  rankingCliente            RankingCliente @default(B)
+  ultimaAtualizacaoBanc     DateTime?
+
+  socios                    Socio[]
+  funcionarios              Funcionario[]
+  alteracoesContratuais     AlteracaoContratual[]
+  alvaras                   Alvara[]
+  
+  criadoEm                  DateTime  @default(now())
+  atualizadoEm              DateTime  @updatedAt
+}
+
+model Socio {
+  id                        String    @id @default(uuid())
+  nome                      String
+  cpf                       String    @unique // [cite: 18]
+  endereco                  String
+  nomePai                   String?
+  empresaPai                String?
+  nomeMae                   String?
+  empresaMae                String?
+  observacoesSociais        String?   // [cite: 23]
+  fazIrpfComContabilidade   Boolean   @default(false)
+  capitalParticipacao       Float?
+
+  empresaId                 String
+  empresa                   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+}
+
+model Funcionario {
+  id                        String    @id @default(uuid())
+  nome                      String
+  cpf                       String    @unique
+
+  empresaId                 String
+  empresa                   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+}
+
+model AlteracaoContratual {
+  id                        String    @id @default(uuid())
+  dataAlteracao             DateTime
+  descricao                 String
+
+  empresaId                 String
+  empresa                   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+}
+
+model Alvara {
+  id                        String    @id @default(uuid())
+  tipo                      String
+  pronto                    Boolean   @default(false)
+  dataVencimento            DateTime?
+
+  empresaId                 String
+  empresa                   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 }
